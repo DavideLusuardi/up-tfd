@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: up-tfd
+Version: 0.0.1
+Summary: Unified Planning Integration of the Temporal Fast Downward planning system
+Home-page: UNKNOWN
+Author: Davide Lusuardi
+Author-email: davide.lusuardi@studenti.unitn.it
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 1
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+
+This package makes the [Temporal Fast Downward](http://gki.informatik.uni-freiburg.de/tools/tfd/) planning system available in the [unified_planning library](https://github.com/aiplan4eu/unified-planning) by the [AIPlan4EU project](https://www.aiplan4eu-project.eu/).
+
