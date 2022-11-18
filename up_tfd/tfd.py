@@ -67,7 +67,7 @@ class tfdPDDLPlanner(PDDLPlanner):
                 line = line.lower()
                 s_ai = re.match(r"^\s*\(\s*([\w?-]+)((\s+[\w?-]+)*)\s*\)\s*$", line)
                 t_ai = re.match(
-                    r"^\s*(\d+\.\d+):\s*\(\s*([\w-]+)([\s\w-]*)\)\s*\[(\d+\.\d+)\]\s*$",
+                    r"^\s*(\d+\.\d+):\s*\(\s*([\w-]+)([\s\w-]*)\)\s*\[(\d+\.\d+)\]\s*$", # TODO
                     # r"^\s*(\d+)\s*:\s*\(\s*([\w?-]+)((\s+[\w?-]+)*)\s*\)\s*(\[\s*(\d+)\s*\])?\s*$",
                     line,
                 )
@@ -108,76 +108,56 @@ class tfdPDDLPlanner(PDDLPlanner):
 
     def _get_cmd(self, domain_filename: str,
                  problem_filename: str, plan_filename: str) -> List[str]:
-        # tfd_executable = os.path.join(os.environ.get('TFD_PREFIX'), 'downward', 'plan')
-        # os.chdir(os.path.dirname(tfd_executable))
-        # cmd = ['/bin/bash', tfd_executable, domain_filename, problem_filename, plan_filename]
-        # sys.path.append(os.path.dirname(tfd_executable))
-        # cmd = ['/usr/bin/python2', tfd_executable, "y+Y+e+r+O+1+C+1+b", domain_filename, problem_filename, plan_filename]
         executable = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'plan.py')
         cmd = [sys.executable, executable, domain_filename, problem_filename, plan_filename]
         return cmd
 
-    # TODO
     def _result_status(
         self,
         problem: "up.model.Problem",
         plan: Optional["up.plans.Plan"],
         retval: int = None, # Default value for legacy support
-        #log_messages: Optional[List[LogMessage]] = None,
         log_messages = None,
         ) -> "up.engines.results.PlanGenerationResultStatus":
 
-        # https://www.fast-downward.org/ExitCodes
-        if retval is None: # legacy support
+        if retval is None or retval in (0, 1):
             if plan is None:
                 return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY
             else:
                 return PlanGenerationResultStatus.SOLVED_SATISFICING
-        if retval in (0, 1, 2, 3):
-            if plan is None:
-                # Should not be possible after portfolios have been fixed
-                return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY
-            else:
-                return PlanGenerationResultStatus.SOLVED_SATISFICING
-        if retval in (10, 11):
-            return PlanGenerationResultStatus.UNSOLVABLE_PROVEN
-        if retval == 12:
-            return PlanGenerationResultStatus.UNSOLVABLE_INCOMPLETELY
         else:
             return up.engines.results.PlanGenerationResultStatus.INTERNAL_ERROR
 
-    # TODO
     @staticmethod
     def satisfies(optimality_guarantee: 'OptimalityGuarantee') -> bool:
         if optimality_guarantee == OptimalityGuarantee.SATISFICING:
             return True
         return False
 
-    # TODO: these are the tamer supports
     @staticmethod
     def supported_kind() -> 'ProblemKind':
         supported_kind = ProblemKind()
-        supported_kind.set_problem_class('ACTION_BASED') # type: ignore
-        supported_kind.set_time('CONTINUOUS_TIME') # type: ignore
-        supported_kind.set_time('INTERMEDIATE_CONDITIONS_AND_EFFECTS') # type: ignore
-        supported_kind.set_time('TIMED_EFFECT') # type: ignore
-        supported_kind.set_time('TIMED_GOALS') # type: ignore
-        supported_kind.set_time('DURATION_INEQUALITIES') # type: ignore
-        supported_kind.set_expression_duration('STATIC_FLUENTS_IN_DURATION') # type: ignore
-        supported_kind.set_expression_duration('FLUENTS_IN_DURATION') # type: ignore
-        supported_kind.set_numbers('DISCRETE_NUMBERS') # type: ignore
-        supported_kind.set_numbers('CONTINUOUS_NUMBERS') # type: ignore
-        supported_kind.set_problem_type("SIMPLE_NUMERIC_PLANNING") # type: ignore
-        supported_kind.set_problem_type("GENERAL_NUMERIC_PLANNING") # type: ignore
-        supported_kind.set_typing('FLAT_TYPING') # type: ignore
-        supported_kind.set_conditions_kind('NEGATIVE_CONDITIONS') # type: ignore
-        supported_kind.set_conditions_kind('DISJUNCTIVE_CONDITIONS') # type: ignore
-        supported_kind.set_conditions_kind('EQUALITY') # type: ignore
-        supported_kind.set_fluents_type('NUMERIC_FLUENTS') # type: ignore
-        supported_kind.set_fluents_type('OBJECT_FLUENTS') # type: ignore
-        supported_kind.set_simulated_entities('SIMULATED_EFFECTS') # type: ignore
+        supported_kind.set_problem_class('ACTION_BASED')
+        supported_kind.set_problem_type("SIMPLE_NUMERIC_PLANNING")
+        supported_kind.set_problem_type("GENERAL_NUMERIC_PLANNING")
+        supported_kind.set_time('CONTINUOUS_TIME')
+        supported_kind.set_time('DISCRETE_TIME')
+        supported_kind.set_expression_duration('STATIC_FLUENTS_IN_DURATION')
+        supported_kind.set_numbers('CONTINUOUS_NUMBERS')
+        supported_kind.set_numbers('DISCRETE_NUMBERS')
+        supported_kind.set_conditions_kind('NEGATIVE_CONDITIONS')
+        supported_kind.set_conditions_kind('DISJUNCTIVE_CONDITIONS')
+        supported_kind.set_conditions_kind('EQUALITY')
+        supported_kind.set_effects_kind('CONDITIONAL_EFFECTS')
+        supported_kind.set_effects_kind('INCREASE_EFFECTS')
+        supported_kind.set_effects_kind('DECREASE_EFFECTS')
+        supported_kind.set_typing('FLAT_TYPING')
+        supported_kind.set_typing('HIERARCHICAL_TYPING')
+        supported_kind.set_fluents_type('NUMERIC_FLUENTS')
+        supported_kind.set_fluents_type('OBJECT_FLUENTS')
+        supported_kind.set_quality_metrics('ACTIONS_COST')
         return supported_kind
-
+        
     @staticmethod
     def supports(problem_kind: 'ProblemKind') -> bool:
         return problem_kind <= tfdPDDLPlanner.supported_kind()
