@@ -20,7 +20,7 @@
 
      (:durative-action MEND_FUSE
           :parameters (?fuse - fuse ?match - match)
-          :duration (= ?duration 4)
+          :duration (and (>= ?duration 4) (<= ?duration 4))
           :condition (and
                (at start (handfree))
 	       (over all (light ?match)))

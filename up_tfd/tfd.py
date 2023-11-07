@@ -3,7 +3,7 @@ import sys
 import unified_planning as up
 import re
 from fractions import Fraction
-from typing import IO, Any, Callable, Optional, List, Tuple, Union, cast
+from typing import Callable, Optional, List, Union
 
 from unified_planning.model import ProblemKind
 from unified_planning.engines import OptimalityGuarantee, PlanGenerationResultStatus
@@ -32,6 +32,9 @@ class tfdPDDLPlanner(PDDLPlanner):
     @staticmethod
     def get_credits(**kwargs) -> Optional['Credits']:
         return credits
+
+    def _get_engine_epsilon(self) -> Fraction:
+        return Fraction(0.01)
 
     def _plan_from_file(
         self,
@@ -67,8 +70,7 @@ class tfdPDDLPlanner(PDDLPlanner):
                 line = line.lower()
                 s_ai = re.match(r"^\s*\(\s*([\w?-]+)((\s+[\w?-]+)*)\s*\)\s*$", line)
                 t_ai = re.match(
-                    r"^\s*(\d+\.\d+):\s*\(\s*([\w-]+)([\s\w-]*)\)\s*\[(\d+\.\d+)\]\s*$", # TODO
-                    # r"^\s*(\d+)\s*:\s*\(\s*([\w?-]+)((\s+[\w?-]+)*)\s*\)\s*(\[\s*(\d+)\s*\])?\s*$",
+                    r"^\s*(\d+\.\d+):\s*\(\s*([\w-]+)([\s\w-]*)\)\s*\[(\d+\.\d+)\]\s*$",
                     line,
                 )
                 if s_ai:
@@ -94,7 +96,7 @@ class tfdPDDLPlanner(PDDLPlanner):
                 for p in params_name:
                     obj = get_item_named(p)
                     assert isinstance(obj, up.model.Object), "Wrong plan or renaming."
-                    parameters.append(problem.env.expression_manager.ObjectExp(obj))
+                    parameters.append(problem.environment.expression_manager.ObjectExp(obj))
                 act_instance = up.plans.ActionInstance(action, tuple(parameters))
                 if is_tt:
                     actions.append((start, act_instance, dur))
@@ -142,12 +144,12 @@ class tfdPDDLPlanner(PDDLPlanner):
         supported_kind.set_problem_type("GENERAL_NUMERIC_PLANNING")
         supported_kind.set_time('CONTINUOUS_TIME')
         supported_kind.set_time('DISCRETE_TIME')
-        supported_kind.set_expression_duration('STATIC_FLUENTS_IN_DURATION')
+        supported_kind.set_expression_duration('STATIC_FLUENTS_IN_DURATIONS')
         supported_kind.set_numbers('CONTINUOUS_NUMBERS')
         supported_kind.set_numbers('DISCRETE_NUMBERS')
         supported_kind.set_conditions_kind('NEGATIVE_CONDITIONS')
         supported_kind.set_conditions_kind('DISJUNCTIVE_CONDITIONS')
-        supported_kind.set_conditions_kind('EQUALITY')
+        supported_kind.set_conditions_kind('EQUALITIES')
         supported_kind.set_effects_kind('CONDITIONAL_EFFECTS')
         supported_kind.set_effects_kind('INCREASE_EFFECTS')
         supported_kind.set_effects_kind('DECREASE_EFFECTS')
@@ -156,6 +158,7 @@ class tfdPDDLPlanner(PDDLPlanner):
         supported_kind.set_fluents_type('NUMERIC_FLUENTS')
         supported_kind.set_fluents_type('OBJECT_FLUENTS')
         supported_kind.set_quality_metrics('ACTIONS_COST')
+        supported_kind.set_quality_metrics('MAKESPAN')
         return supported_kind
         
     @staticmethod

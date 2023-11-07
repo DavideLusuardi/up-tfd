@@ -2,3 +2,4 @@ build/
 up_tfd.egg-info/
 add_build_config.patch
 skip_pycache.patch
+__pycache__
